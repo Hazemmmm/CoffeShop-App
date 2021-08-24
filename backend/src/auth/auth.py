@@ -9,11 +9,7 @@ AUTH0_DOMAIN = 'fsnd-hazem.us.auth0.com'
 ALGORITHMS = ['RS256']
 API_AUDIENCE = 'cafe'
 
-## AuthError Exception
-'''
-AuthError Exception
-A standardized way to communicate auth failure modes
-'''
+
 class AuthError(Exception):
     def __init__(self, error, status_code):
         self.error = error
@@ -22,12 +18,14 @@ class AuthError(Exception):
 
 
 def get_token_auth_header():
-    if ['Authorization'] not in request.headers:
-        raise AuthError({"code":"authorization header missing",
-                         "description":"authorization is expected"},401)
-    
     auth = request.headers['Authorization']
+    
+    # if ['Authorization'] not in request.headers:
+    #     raise AuthError({"code":"authorization header missing",
+    #                      "description":"authorization is expected"},401)
+    
     header_parts = auth.split(' ')
+  
     
     if len(header_parts)!=2:
         raise AuthError({"code":"invalid headers authorization",
@@ -43,7 +41,7 @@ def get_token_auth_header():
 
 
 def check_permissions(permission, payload):
-    if ['permissions'] not in payload:
+    if permission not in payload['permissions']:
         raise AuthError({"code":"permission is missing",
                          "description":"permmision must be in payload formnat"},401)
     return True
@@ -51,8 +49,10 @@ def check_permissions(permission, payload):
 
 def verify_decode_jwt(token):
     jsonurl = urlopen(f'https://{AUTH0_DOMAIN}/.well-known/jwks.json')
-    jwtks = json.load(jsonurl.read())
+    jwtks = json.loads(jsonurl.read())
+ 
     unverified_header = jwt.get_unverified_header(token)
+   
     
     rsa_key = {}
     
@@ -60,6 +60,7 @@ def verify_decode_jwt(token):
         raise AuthError({"code":"invalid header","description":"authorization no formed"},401)
     
     for key in jwtks['keys']:
+       
         if key['kid'] == unverified_header['kid']:
             rsa_key ={
                 'kty':key['kty'],
@@ -73,7 +74,7 @@ def verify_decode_jwt(token):
         try:
             payload = jwt.decode(token,
                                  rsa_key,
-                                 algorithm=ALGORITHMS,
+                                 algorithms=ALGORITHMS,
                                  audience=API_AUDIENCE,
                                  issuer='https://' + AUTH0_DOMAIN + '/')
             return payload
@@ -97,13 +98,7 @@ def requires_auth(permission=''):
         @wraps(f)
         def wrapper(*args, **kwargs):
             token = get_token_auth_header()
-            
-            try:
-                payload = verify_decode_jwt(token)
-            except:
-                raise AuthError({"code":"invalid Token",
-                                 "description":"access denied cause of invalid token"},401)
-                
+            payload = verify_decode_jwt(token)
             check_permissions(permission, payload)
             return f(payload, *args, **kwargs)
 

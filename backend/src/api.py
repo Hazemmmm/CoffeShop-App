@@ -32,7 +32,7 @@ def get_all_drinks():
 
 @app.route('/drinks-detail',methods=['GET'])
 @requires_auth('get:drinks-detail')
-def get_drinks_details():
+def get_drinks_details(jwt):
     try:
         drinks = Drink.query.all()
         if len(drinks) == 0:
