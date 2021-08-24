@@ -85,7 +85,7 @@ def verify_decode_jwt(token):
             raise AuthError({"code":"invalid Claims",
                                  "description":"invalid claims"},401)      
         except Exception:
-            raise AuthError({"code":"invalid Header","description":"unable to parse authonication token",400})
+            raise AuthError({"code":"invalid Header","description":"unable to parse authonication token"},400)
         
     raise AuthError({"code":"invalid_header",
                      "description":"unable to find the appropiate key"},400)
